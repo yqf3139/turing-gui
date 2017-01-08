@@ -1,0 +1,120 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <link href="./css/turing.css" rel="stylesheet" type="text/css">
+  <link href="./css/textarea.css" rel="stylesheet" type="text/css">
+  <title>
+    Turing machine simulator
+  </title>
+  <script type="text/javascript" defer="defer" src="./libs/jquery-1.11.1.min.js"></script>
+  <script type="text/javascript" defer="defer" src="./javascript/jsturing.js"></script>
+</head>
+
+<body onload="OnLoad();">
+  <div id="Machine">
+    <div id="MachineTapeContainer">
+      <div class="BoxTitle">Tape</div>
+      <div id="MachineTape" class="MachineStatusBox" title="This is the Turing machine s tape. The head position is indicated by the highlighted cell and arrow.">
+        <div id="RunningTapeDisplay">
+          <div id="TapeValues">
+            <pre id="LeftTape" class="tape"></pre>
+            <div id="ActiveTapeArea">
+              <pre id="ActiveTape" class="tape">1</pre>
+              <div id="MachineHead">
+                <div class="HeadTop"></div>
+                <div class="HeadBody">Head</div>
+              </div>
+            </div>
+            <pre id="RightTape" class="tape">001001</pre>
+          </div>
+        </div>
+      </div>
+      <!-- div MachineTape !-->
+    </div>
+    <div id="MachineMiddleSection">
+      <div id="MachineStatusMsgWrapper">
+        <pre id="MachineStatusMsgText">Load or write a Turing machine program and click Run!</pre>
+        <!-- div MachineStatusMsgText !-->
+        <div id="MachineStatusMsgBg"></div>
+      </div>
+      <div id="MachineStateContainer" class="MachineStatusContainer" title="This is the Turing machine s current state">
+        <div class="BoxTitle">Current state</div>
+        <div id="MachineState" class="MachineStatusBox">0</div>
+        <!-- div MachineState !-->
+      </div>
+      <!-- div MachineStateContainer !-->
+      <div id="MachineStepsContainer" class="MachineStatusContainer" title="This is the number of steps executed by the machine since starting">
+        <div class="BoxTitle">Steps</div>
+        <div id="MachineSteps" class="MachineStatusBox">0</div>
+        <!-- div MachineSteps !-->
+      </div>
+      <!-- div MachineStepsContainer !-->
+    </div>
+    <!-- div MachineMiddleSection !-->
+    <div class="cleardiv"></div>
+    <div id="MachineLowerSection">
+      <div id="MachineProgramContainer">
+        <div class="BoxTitle">Turing machine program</div>
+        <div id="MachineProgramBlock">
+          <div id="MachineProgramBlock2">
+            <div id="SourceContainer">
+              <div id="SourceBackground" style="margin-top: 0px;">
+              </div>
+              <div id="tabackground">
+                <textarea id="Source" wrap="off" oninput="TextareaChanged();" onscroll="UpdateTextareaScroll();" onblur="Compile();">
+                </textarea>
+              </div>
+            </div>
+            <div id="SyntaxMsg"></div>
+          </div>
+          <!-- div MachineProgramBlock2 !-->
+        </div>
+        <!-- div MachineProgramBlock !-->
+      </div>
+      <!-- div MachineProgramContainer !-->
+      <div id="MachineControlBlock">
+        <div class="BoxTitle">Controls</div>
+        <div id="MachineButtonsBlock">
+          <button id="RunButton" onclick="RunButton();" title="Start the machine running">Run</button>
+          <span title="If enabled, runs as fast as your browser &amp; computer allow">
+        <input type="checkbox" id="SpeedCheckbox" onclick="SpeedCheckbox();">Run at full speed
+       </span>
+          <br>
+          <button id="StopButton" onclick="StopButton();" disabled="" title="Pause the machine when running">Pause</button><br>
+          <button id="StepButton" onclick="StepButton();" title="Run the machine for a single step and the pause">Step</button><br>
+          <button id="ResetButton" onclick="ResetButton();" title="Reset the machine and tape to the initial state">Reset</button>
+          <div id="InitialTapeDisplay" title="This initial data will be loaded on the tape when the machine starts">
+            Initial input:<input type="text" id="InitialInput" value="">
+          </div>
+          <div style="font-size: small;">
+            <a href="javascript:" onclick="$('#AdvancedOptions').slideToggle();" title="Show advanced machine options">Advanced options</a>
+          </div>
+          <div id="AdvancedOptions" style="display: none; margin-top: 0.25em;">
+            <div id="InitialStateDisplay" title="This is the state that the machine will start in" style="margin-bottom: 0.5em;">
+              Initial state:<input type="text" id="InitialState" value="0">
+            </div>
+            <div title="Choose between different Turing machine variants">
+              Machine variant:
+              <select onchange="VariantChanged();" id="MachineVariant">
+          <option value="0" selected="selected">Standard</option>
+          <option value="1">Semi-infinite tape</option>
+         </select>
+              <div id="MachineVariantDescription" style="font-size: small; font-style: italic;">Standard Turing machine with tape infinite in both directions</div>
+              <span style="font-size: x-small;"><a href="javascript:" onclick="$("#AdvancedOptions").hide();">[Close]</a></span>
+            </div>
+          </div>
+          <br>
+          <br>
+        </div>
+        <!-- div MachineButtonsBlock !-->
+      </div>
+      <!-- div MachineControlBlock !-->
+    </div>
+    <!-- div MachineLowerSection !-->
+  </div>
+  <!-- div Machine !-->
+</body>
+
+</html>
