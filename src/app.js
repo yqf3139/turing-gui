@@ -27,7 +27,6 @@ var options = {
         font: {
             size: 14
         },
-
     },
     manipulation: {
         addNode: function (data, callback) {

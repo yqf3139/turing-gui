@@ -1,6 +1,6 @@
-bundle.js
 bundle.min.js
-
+bundle.js
+bundle.min.js.map
 # Created by https://www.gitignore.io/api/node
 
 ### Node ###
