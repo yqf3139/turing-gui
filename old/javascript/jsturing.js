@@ -57,7 +57,6 @@ function Step() {
 		nLineNumber = oInstruction.sourceLineNumber;
 	} else {
 		/* No matching rule found; halt */
-		debug(1, "Warning: no instruction found for state '" + sState + "' symbol '" + sHeadSymbol + "'; halting");
 		SetStatusMessage("Halted. No rule for state '" + sState + "' and symbol '" + sHeadSymbol + "'.", 2);
 		sNewState = "halt";
 		sNewSymbol = sHeadSymbol;
@@ -126,9 +125,7 @@ function StopTimer() {
 function Reset() {
 	var sInitialTape = $("#InitialInput")[0].value;
 
-	/* Find the initial head location, if given */
-	nHeadPosition = sInitialTape.indexOf("*");
-	if (nHeadPosition == -1) nHeadPosition = 0;
+	nHeadPosition = 0;
 
 	/* Initialise tape */
 	sInitialTape = sInitialTape.replace(/\*/g, "").replace(/ /g, "_");
@@ -138,7 +135,6 @@ function Reset() {
 
 	/* Initialise state */
 	var sInitialState = $("#InitialState")[0].value;
-	sInitialState = $.trim(sInitialState).split(/\s+/)[0];
 	if (!sInitialState || sInitialState == "") sInitialState = "0";
 	sState = sInitialState;
 
@@ -174,10 +170,8 @@ function Compile() {
 	for (var i = 0; i < aLines.length; i++) {
 		var oTuple = ParseLine(aLines[i], i);
 		if (oTuple.isValid) {
-			debug(5, " Parsed tuple: '" + oTuple.currentState + "'  '" + oTuple.currentSymbol + "'  '" + oTuple.newSymbol + "'  '" + oTuple.action + "'  '" + oTuple.newState + "'");
 			if (aProgram[oTuple.currentState] == null) aProgram[oTuple.currentState] = new Object;
 			if (aProgram[oTuple.currentState][oTuple.currentSymbol] != null) {
-				debug(1, "Warning: multiple definitions for state '" + oTuple.currentState + "' symbol '" + oTuple.currentSymbol + "' on lines " + (aProgram[oTuple.currentState][oTuple.currentSymbol].sourceLineNumber + 1) + " and " + (i + 1));
 				SetSyntaxMessage("Warning: Multiple definitions for state '" + oTuple.currentState + "' symbol '" + oTuple.currentSymbol + "' on lines " + (aProgram[oTuple.currentState][oTuple.currentSymbol].sourceLineNumber + 1) + " and " + (i + 1));
 				SetErrorLine(i);
 				SetErrorLine(aProgram[oTuple.currentState][oTuple.currentSymbol].sourceLineNumber);
@@ -193,18 +187,6 @@ function Compile() {
 			debug(2, "Syntax error: " + oTuple.error);
 			SetSyntaxMessage(oTuple.error);
 			SetErrorLine(i);
-		}
-	}
-
-	/* Set debug level, if specified */
-	oRegExp = new RegExp(";.*\\$DEBUG: *(.+)");
-	aResult = oRegExp.exec(sSource);
-	if (aResult != null && aResult.length >= 2) {
-		var nNewDebugLevel = parseInt(aResult[1]);
-		if (nNewDebugLevel != nDebugLevel) {
-			nDebugLevel = parseInt(aResult[1]);
-			debug(1, "Setting debug level to " + nDebugLevel);
-			if (nDebugLevel > 0) $(".DebugClass").toggle(true);
 		}
 	}
 
@@ -307,30 +289,18 @@ function GetNextInstruction(sState, sHeadSymbol) {
 	if (aProgram[sState] != null && aProgram[sState][sHeadSymbol] != null) {
 		/* Use instruction specifically corresponding to current state & symbol, if any */
 		return (aProgram[sState][sHeadSymbol]);
-	} else if (aProgram[sState] != null && aProgram[sState]["*"] != null) {
-		/* Next use rule for the current state and default symbol, if any */
-		return (aProgram[sState]["*"]);
-	} else if (aProgram["*"] != null && aProgram["*"][sHeadSymbol] != null) {
-		/* Next use rule for default state and current symbol, if any */
-		return (aProgram["*"][sHeadSymbol]);
-	} else if (aProgram["*"] != null && aProgram["*"]["*"] != null) {
-		/* Finally use rule for default state and default symbol */
-		return (aProgram["*"]["*"]);
 	} else return (null);
 }
 
 /* GetTapeSymbol( n ): returns the symbol at cell n of the TM tape */
 function GetTapeSymbol(n) {
 	if (n < nTapeOffset || n >= sTape.length + nTapeOffset) {
-		debug(4, "GetTapeSymbol( " + n + " ) = '" + c + "'   outside sTape range");
 		return ("_");
 	} else {
 		var c = sTape.charAt(n - nTapeOffset);
 		if (c == " ") {
 			c = "_";
-			debug(4, "Warning: GetTapeSymbol() got SPACE not _ !");
 		}
-		debug(4, "GetTapeSymbol( " + n + " ) = '" + c + "'");
 		return (c);
 	}
 }
@@ -338,10 +308,8 @@ function GetTapeSymbol(n) {
 
 /* SetTapeSymbol( n, c ): writes symbol c to cell n of the TM tape */
 function SetTapeSymbol(n, c) {
-	debug(4, "SetTapeSymbol( " + n + ", " + c + " ); sTape = '" + sTape + "' nTapeOffset = " + nTapeOffset);
 	if (c == " ") {
 		c = "_";
-		debug(4, "Warning: SetTapeSymbol() with SPACE not _ !");
 	}
 
 	if (n < nTapeOffset) {
@@ -374,7 +342,6 @@ function SaveMachineSnapshot() {
 
 /* LoadMachineState(): Load a machine and state from an object created by SaveMachineSnapshot */
 function LoadMachineSnapshot(oObj) {
-	if (oObj.version && oObj.version != 1) debug(1, "Warning: saved machine has unknown version number " + oObj.version);
 	if (oObj.program) oTextarea.value = oObj.program;
 	if (oObj.state) sState = oObj.state;
 	if (oObj.tape) sTape = oObj.tape;
@@ -493,7 +460,6 @@ function RenderSteps() {
 }
 
 function RenderLineMarkers() {
-	debug(3, "Rendering line markers: " + (oNextInstruction ? oNextInstruction.sourceLineNumber : -1) + " " + (oPrevInstruction ? oPrevInstruction.sourceLineNumber : -1));
 	SetActiveLines((oNextInstruction ? oNextInstruction.sourceLineNumber : -1), (oPrevInstruction ? oPrevInstruction.sourceLineNumber : -1));
 }
 
@@ -503,10 +469,6 @@ function UpdateInterface() {
 	RenderState();
 	RenderSteps();
 	RenderLineMarkers();
-}
-
-function ClearDebug() {
-	$("#debug").empty();
 }
 
 function EnableControls(bStep, bRun, bStop, bReset, bSpeed, bTextarea) {
@@ -652,12 +614,6 @@ function UpdateTextareaScroll() {
 /* OnLoad function for HTML body.  Initialise things when page is loaded. */
 function OnLoad() {
 	if (nDebugLevel > 0) $(".DebugClass").toggle(true);
-
-	if (typeof (isOldIE) != "undefined") {
-		debug(1, "Old version of IE detected, adding extra textarea events");
-		/* Old versions of IE need onkeypress event for textarea as well as onchange */
-		$("#Source").on("keypress change", TextareaChanged);
-	}
 
 	oTextarea = $("#Source")[0];
 	TextareaChanged();
