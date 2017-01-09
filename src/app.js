@@ -1,19 +1,63 @@
 console.log('app.js');
 
+// import libs
+// vis for network visualization and manipulation
 var vis = require('vis/dist/vis.js');
+// some network building utils
 var util = require('./util.js');
+// the turing simulator
 var turing = require('./turing.js');
 
-// DOM element where the Timeline will be attached
-var container = document.getElementById('visualization');
-
+var container;
 var nodes = null;
 var edges = null;
 var network = null;
-// randomly create some nodes and edges
 var data = null;
 var seed = 2;
 var env = {};
+
+var options = {
+    layout: {
+        randomSeed: 2
+    },
+    interaction: {
+        hover: true
+    },
+    nodes: {
+        font: {
+            size: 14
+        },
+
+    },
+    manipulation: {
+        addNode: function (data, callback) {
+            data.extra = '';
+            doPopUp("Add Node", saveNode, data, callback);
+        },
+        editNode: function (data, callback) {
+            doPopUp("Edit Node", saveNode, data, callback);
+        },
+        addEdge: function (data, callback) {
+            data.id = util.guid();
+            data.arrows = 'to';
+            data.label = '0/1/r';
+            data.extra = '';
+            doPopUp("Add Edge", saveEdge, data, callback);
+        },
+        editEdge: function (data, callback) {
+            data.arrows = 'to';
+            data.label = '0/1/r';
+            data.extra = '';
+            doPopUp("Edit Edge", saveEdge, data, callback);
+        },
+        deleteNode: function (data, callback) {
+            callback(data);
+        },
+        deleteEdge: function (data, callback) {
+            callback(data);
+        },
+    }
+};
 
 function destroy() {
     if (network !== null) {
@@ -52,62 +96,13 @@ function resetData() {
     }
 }
 
-function draw() {
+function createNetwork() {
     destroy();
     resetData();
 
     var container = document.getElementById('mynetwork');
-    var options = {
-        layout: {
-            randomSeed: 2
-        },
-        interaction: {
-            hover: true
-        },
-        nodes: {
-            font: {
-                size: 14
-            },
-
-        },
-        manipulation: {
-            addNode: function (data, callback) {
-                data.extra = '';
-                doPopUp("Add Node", saveNode, data, callback);
-            },
-            editNode: function (data, callback) {
-                doPopUp("Edit Node", saveNode, data, callback);
-            },
-            addEdge: function (data, callback) {
-                console.log('addEdge', data);
-                data.id = util.guid();
-                data.arrows = 'to';
-                data.label = '0/1/r';
-                data.extra = '';
-                doPopUp("Add Edge", saveEdge, data, callback);
-            },
-            editEdge: function (data, callback) {
-                console.log('editEdge', data);
-                data.arrows = 'to';
-                data.label = '0/1/r';
-                data.extra = '';
-                doPopUp("Edit Edge", saveEdge, data, callback);
-            },
-            deleteNode: function (data, callback) {
-                console.log('deleteNode', data);
-                callback(data);
-            },
-            deleteEdge: function (data, callback) {
-                console.log('deleteEdge', data);
-                callback(data);
-            },
-        }
-    };
     network = new vis.Network(container, data, options);
-
     window.network = network;
-    window.env = env;
-    env.data = data;
 }
 
 function doPopUp(title, saveFunc, data, callback) {
@@ -146,7 +141,6 @@ function saveNode(data, callback) {
     }
     clearPopUp();
     callback(data);
-    console.log('save data', data);
 }
 
 function saveEdge(data, callback) {
@@ -154,13 +148,48 @@ function saveEdge(data, callback) {
     data.extra = document.getElementById('node-extra').value;
     clearPopUp();
     callback(data);
-    console.log('save data', data);
 }
 
-function init() {
+function download(text, name, type) {
+    var a = document.createElement("a");
+    var file = new Blob([text], {
+        type: type
+    });
+    a.href = URL.createObjectURL(file);
+    a.download = name;
+    a.click();
+}
+
+function saveWorkspace() {
+    download(JSON.stringify({
+        data: data
+    }), 'save.tmws', 'tmws');
+}
+
+function restoreWorkspace(str) {
+    var snapshot = JSON.parse(str);
+    data = {
+        nodes: obj2DataSet(snapshot.data.nodes),
+        edges: obj2DataSet(snapshot.data.edges)
+    }
+    network.setData(data);
+    network.redraw();
+    env.data = data;
+}
+
+function obj2DataSet(obj) {
+    var ds = new vis.DataSet();
+    for (var prop in obj) {
+        ds[prop] = obj[prop];
+    }
+    return ds;
+}
+
+document.body.onload = function () {
     var msgArea = document.getElementById("msgArea");
-    var msgOutput = function (...msg) {
-        msgArea.value = msg.join(' ');
+    var msgOutput = function () {
+        var msg = Array.from(arguments);
+        msgArea.innerText = msg.join(' ');
     }
     turing.setMsgOutput(msgOutput);
 
@@ -177,7 +206,7 @@ function init() {
     var tapeLeft = document.getElementById("tapeLeft");
     var tapeRight = document.getElementById("tapeRight");
     var tapeHead = document.getElementById("tapeHead");
-    var drawCallback = function() {
+    var drawCallback = function () {
         var head = turing.machine.head;
         var len = turing.machine.tape.length;
         var tape = turing.machine.tape;
@@ -185,12 +214,12 @@ function init() {
         tapeLeft.innerText = '';
         tapeRight.innerText = '';
 
-        if(head > 0) {
+        if (head > 0) {
             tapeLeft.innerText = tape.slice(0, head).join('');
         }
         tapeHead.innerText = tape[head] == undefined ? '_' : tape[head];
-        if(len-1-head > 0){
-            tapeRight.innerText = tape.slice(head+1, len).join('');
+        if (len - 1 - head > 0) {
+            tapeRight.innerText = tape.slice(head + 1, len).join('');
         }
         network.redraw();
     }
@@ -230,43 +259,5 @@ function init() {
             turing.step();
         }, false);
 
-    draw();
-}
-
-function download(text, name, type) {
-    var a = document.createElement("a");
-    var file = new Blob([text], {
-        type: type
-    });
-    a.href = URL.createObjectURL(file);
-    a.download = name;
-    a.click();
-}
-
-function saveWorkspace() {
-    download(JSON.stringify({
-        data: data
-    }), 'save.tmws', 'tmws');
-}
-
-function restoreWorkspace(str) {
-    snapshot = JSON.parse(str);
-    data = {
-        nodes: obj2DataSet(snapshot.data.nodes),
-        edges: obj2DataSet(snapshot.data.edges)
-    }
-    network.setData(data);
-    network.redraw();
-    env.data = data;
-}
-
-function obj2DataSet(obj) {
-    var ds = new vis.DataSet();
-    for (var prop in obj) {
-        ds[prop] = obj[prop];
-    }
-    return ds;
-}
-
-document.body.onload = init;
-window.turing = turing;
+    createNetwork();
+};

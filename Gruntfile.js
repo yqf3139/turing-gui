@@ -14,7 +14,7 @@ module.exports = function (grunt) {
             }
         },
         browserify: {
-            'build/bundle.js': ['client/app.js']
+            'build/bundle.js': ['src/app.js']
         },
         copy: {
             files: {
@@ -23,8 +23,8 @@ module.exports = function (grunt) {
             }
         },
         watch: {
-            files: ["client/*.js"],
-            tasks: ['browserify', 'copy']
+            files: ["src/*.js"],
+            tasks: ['browserify', 'uglify']
         },
     });
 
@@ -36,6 +36,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
 
     // Default task(s).
-    grunt.registerTask('default', ['browserify', 'copy']);
+    grunt.registerTask('default', ['browserify', 'uglify']);
 
 };

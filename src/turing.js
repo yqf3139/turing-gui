@@ -87,17 +87,14 @@ function halt() {
     var m = machine;
     if (m.head < 0) {
         msgOutput('halt because tape is limited');
-        console.log('halt because tape is limited');
         return true;
     }
     if (m.table[m.state] == null) {
         msgOutput('halt because no such state');
-        console.log('halt because no such state');
         return true;
     }
     if (m.table[m.state].extra == 'accept' && getTransition() == null) {
         msgOutput('halt accept');
-        console.log('halt accept');
         return true;
     }
     return false;
@@ -145,14 +142,12 @@ function getTransition() {
     var m = machine;
     if (m.table[m.state] == null) {
         msgOutput(m.state, 'do not exits');
-        console.error(m.state, 'do not exits');
         return false;
     }
     var symbol = getSymbolFromTape();
     var trans = m.table[m.state][symbol];
     if (trans == null) {
         msgOutput(symbol, m.table[m.state].label, 'do not exits');
-        console.error(symbol, m.table[m.state].label, 'do not exits');
     }
     return trans;
 }
@@ -174,5 +169,4 @@ module.exports = {
     }
 }
 
-window.mktable = makeTable;
 window.machine = machine;
